@@ -37,8 +37,10 @@ try{
             return $this->returnError('E001','data enterd in invalid');
         }
 
-
+        $admin=Auth::guard('admin-api')->user();
+        $admin->api_token=$token;
         //return token
+        return $this->returnData('Admin',$admin,'your Data');
 
     }
     catch(\Exception $ex) {
