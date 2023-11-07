@@ -13,38 +13,60 @@ class AuthController extends Controller
 {
     use GeneralTrait;
     public function login(Request $request){
-        //validation
-try{
-        $rules = [
-            "email" => "required|exists:admins,email",
-            "password" => "required"
-            //|exists:admins,password
-        ];
-        $validator = Validator::make ($request->all(),$rules) ;
-        if($validator->fails ()) {
-        $code = $this->returnCodeAccordingToInput ($validator);
-        return $this->returnValidationError ($code, $validator);
+                //validation
+            try{
+                $rules = [
+                    "email" => "required|exists:admins,email",
+                    "password" => "required"
+                    //|exists:admins,password
+                ];
+                $validator = Validator::make ($request->all(),$rules) ;
+                if($validator->fails ()) {
+                $code = $this->returnCodeAccordingToInput ($validator);
+                return $this->returnValidationError ($code, $validator);
 
+                }
+
+                //login
+
+                $credentials = $request->only(['email', 'password']);
+                $token=Auth::guard('admin-api')->attempt($credentials);
+
+
+                if(!$token) {
+                    return $this->returnError('E001','data enterd in invalid');
+                }
+
+                $admin=Auth::guard('admin-api')->user();
+                $admin->api_token=$token;
+                //return token and data
+                return $this->returnData('Admin',$admin,'your Data');
+
+            }
+            catch(\Exception $ex) {
+            return $this->returnError($ex->getCode(),$ex->getMessage());
+                    }
         }
 
-        //login
+    public function logout(Request $request){
 
-        $credentials = $request->only(['email', 'password']);
-        $token=Auth::guard('admin-api')->attempt($credentials);
+        $token=$request->header('auth-token');
+        if($token)
+        {
+            try{
+            JWTAuth::setToken($token)->invalidate(); //logout
 
-
-        if(!$token) {
-            return $this->returnError('E001','data enterd in invalid');
+            }catch(\Tymon\JWTAuth\Exceptions\TokenInvalidException){
+                return $this->returnError('','Tokken invalid');
+            }
+            return $this->returnSuccessMessage('logout successfully');
+        }
+        else
+        {
+            return $this->returnError('E001',"Token invalid, Not Provide");
         }
 
-        $admin=Auth::guard('admin-api')->user();
-        $admin->api_token=$token;
-        //return token
-        return $this->returnData('Admin',$admin,'your Data');
 
     }
-    catch(\Exception $ex) {
-    return $this->returnError($ex->getCode(),$ex->getMessage());
-}
-}
+
 }

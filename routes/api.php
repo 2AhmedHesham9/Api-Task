@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 // use App\Http\Controllers\Api;
 use App\Http\Controllers\Api\CatigoriesController;
 use App\Http\Controllers\Api\Admin\AuthController;
+use App\Http\Middleware\AssignGuard;
+
 use Tymon\JWTAuth\Facades\JWTAuth;
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +33,8 @@ Route::group(['middleware'=>['api','checkpassword']], function(){
 
     Route::group(['prefix' => 'admin'], function(){
         Route::post('login',[AuthController::class,'login']);
+        Route::post('logout',[AuthController::class,'logout'])->middleware('auth.guard:admin-api');
+        //invalid token security side
     });
 
 });
